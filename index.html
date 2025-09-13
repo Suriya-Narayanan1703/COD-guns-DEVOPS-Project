@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>COD Guns List</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2em;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1em;
+      font-size: 2em;
+    }
+    .gun-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
+      padding: 0;
+      margin: 0 auto;
+      max-width: 1000px;
+      overflow: visible; /* This allows popups to overflow */
+    }
+    .gun-item {
+      background: white;
+      padding: 22px 28px;
+      min-width: 150px;
+      max-width: 180px;
+      margin: 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+      position: relative;
+      cursor: pointer;
+      text-align: center;
+      font-size: 1.15em;
+      transition: box-shadow 0.3s, transform 0.3s, background 0.3s;
+      z-index: 1; /* Ensure stacking context exists */
+    }
+    .gun-item:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+      background-color: #e8f0fe;
+      transform: scale(1.04);
+      z-index: 2; /* Bring hovered card forward */
+    }
+    .details-box {
+      display: none;
+      position: absolute;
+      top: 105%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #34495e;
+      color: white;
+      padding: 12px 14px;
+      border-radius: 7px;
+      white-space: normal;
+      font-size: 0.96em;
+      min-width: 160px;
+      max-width: 220px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.28);
+      z-index: 99; /* Ensure popup stays on top of everything */
+    }
+    .gun-item:hover .details-box {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Call of Duty Guns List</h1>
+  <div class="gun-list" id="gunList">
+    <!-- JS populates here -->
+  </div>
+
+  <script>
+    const guns = [
+      { name: "AK-47", range: 600, damage: 35, fireRate: 600, type: "Assault Rifle" },
+      { name: "M4A1", range: 550, damage: 33, fireRate: 700, type: "Assault Rifle" },
+      { name: "MP5", range: 400, damage: 25, fireRate: 800, type: "SMG" },
+      { name: "Kar98k", range: 1000, damage: 90, fireRate: 45, type: "Sniper" },
+      { name: "Glock 18", range: 100, damage: 20, fireRate: 400, type: "Pistol" },
+      { name: "UMP45", range: 350, damage: 29, fireRate: 650, type: "SMG" },
+      { name: "FAMAS", range: 500, damage: 32, fireRate: 900, type: "Assault Rifle" },
+      { name: "Desert Eagle", range: 120, damage: 50, fireRate: 250, type: "Pistol" },
+      { name: "P90", range: 280, damage: 22, fireRate: 900, type: "SMG" },
+      { name: "RPD", range: 800, damage: 37, fireRate: 750, type: "LMG" },
+      { name: "Barrett .50cal", range: 1200, damage: 95, fireRate: 42, type: "Sniper" },
+      { name: "M870", range: 35, damage: 80, fireRate: 70, type: "Shotgun" }
+    ];
+
+    const gunList = document.getElementById('gunList');
+    guns.forEach(gun => {
+      const div = document.createElement('div');
+      div.className = 'gun-item';
+      div.textContent = gun.name;
+      const details = document.createElement('div');
+      details.className = 'details-box';
+      details.innerHTML = `
+        <strong>Range:</strong> ${gun.range} meters<br/>
+        <strong>Damage:</strong> ${gun.damage}<br/>
+        <strong>Fire Rate:</strong> ${gun.fireRate} RPM<br/>
+        <strong>Type:</strong> ${gun.type}
+      `;
+      div.appendChild(details);
+      gunList.appendChild(div);
+    });
+  </script>
+</body>
+</html>

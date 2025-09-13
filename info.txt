@@ -1,0 +1,219 @@
+DevOps Project: Dockerizing and Deploying a Frontend App with Kubernetes
+
+--------------------------------------------------------------------------------
+Step 1: Prepare your frontend app
+--------------------------------------------------------------------------------
+- Create your 'index.html' file with the frontend code for your application.
+
+--------------------------------------------------------------------------------
+Step 2: Create Dockerfile for containerizing the app
+--------------------------------------------------------------------------------
+Create a file named 'Dockerfile' with the following content:
+
+FROM nginx:alpine
+# Use lightweight Nginx image
+
+RUN rm -rf /usr/share/nginx/html/*
+# Remove default Nginx web content
+
+COPY ./index.html /usr/share/nginx/html/index.html
+# Copy your index.html into the container
+
+RUN sed -i 's/listen       80;/listen       8080;/' /etc/nginx/conf.d/default.conf
+# Change Nginx to listen on port 8080 inside the container
+
+EXPOSE 8080
+# Expose port 8080 in container
+
+CMD ["nginx", "-g", "daemon off;"]
+# Run Nginx in foreground to keep container alive
+
+--------------------------------------------------------------------------------
+Step 3: Build Docker Image
+--------------------------------------------------------------------------------
+Open your terminal in the project folder and run:
+
+docker build -t cod-guns-frontend .
+
+# This creates a Docker image named 'cod-guns-frontend'
+
+--------------------------------------------------------------------------------
+Step 4: Run Docker Container
+--------------------------------------------------------------------------------
+Run the container and map container port 8080 to host port 5500 (or any free port):
+
+docker run -d -p 5500:8080 cod-guns-frontend
+
+# '-d' runs container in detached mode (background)
+# '-p' maps host port 5500 to container port 8080
+
+Access your app in browser at http://localhost:5500
+
+--------------------------------------------------------------------------------
+Step 5: Prepare Kubernetes manifests
+--------------------------------------------------------------------------------
+Create three YAML files:
+
+deployment.yaml (manages app replication and lifecycle):
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cod-guns-frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cod-guns-frontend
+  template:
+    metadata:
+      labels:
+        app: cod-guns-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: your-dockerhub-username/cod-guns-frontend:latest
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+
+service.yaml (exposes your pods internally):
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cod-guns-frontend-service
+spec:
+  selector:
+    app: cod-guns-frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: ClusterIP
+
+ingress.yaml (routes external traffic to your service):
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cod-guns-frontend-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: codgunsmafia.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cod-guns-frontend-service
+            port:
+              number: 80
+
+--------------------------------------------------------------------------------
+Step 6: Install and start Minikube (local Kubernetes cluster)
+--------------------------------------------------------------------------------
+# Install Chocolatey (if not installed already)
+# Run PowerShell as Administrator and execute:
+
+Set-ExecutionPolicy Bypass -Scope Process -Force
+
+[System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+# Install Minikube using Chocolatey
+choco install minikube -y
+
+# Start Minikube
+minikube start
+
+# Confirm Minikube is ready
+kubectl get nodes
+
+--------------------------------------------------------------------------------
+Step 7: Enable Ingress controller on Minikube
+--------------------------------------------------------------------------------
+minikube addons enable ingress
+
+kubectl get pods -n ingress-nginx
+# Wait until ingress controller pods are running
+
+--------------------------------------------------------------------------------
+Step 8: Apply Kubernetes manifests
+--------------------------------------------------------------------------------
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml
+
+--------------------------------------------------------------------------------
+Step 9: Start Minikube tunnel to expose LoadBalancer and Ingress services
+--------------------------------------------------------------------------------
+minikube tunnel
+
+# Keep this running in the terminal to keep the tunnel open
+
+--------------------------------------------------------------------------------
+Step 10: Map ingress hostname to Minikube IP
+--------------------------------------------------------------------------------
+# Find Minikube IP
+minikube ip
+
+# On Windows, edit hosts file (run Notepad as Administrator)
+# File location: C:\Windows\System32\drivers\etc\hosts
+# Add the following line (replace <minikube-ip> with actual IP):
+
+<minikube-ip> codgunsmafia.local
+
+# Save file
+
+--------------------------------------------------------------------------------
+Step 11: Access your app in browser
+--------------------------------------------------------------------------------
+Open browser and go to:
+
+http://codgunsmafia.local
+
+You should see your frontend app running via the Kubernetes ingress.
+
+--------------------------------------------------------------------------------
+Notes:
+- Replace "your-dockerhub-username/cod-guns-frontend:latest" with your actual Docker Hub image.
+- Ingress hostname must be lowercase and a valid domain.
+- Do not close the terminal running 'minikube tunnel'.
+- Use namespaces in Kubernetes for environment or project separation (optional).
+- Automate build and deployment using CI/CD (e.g., GitHub Actions) for best DevOps practices.
+
+--------------------------------------------------------------------------------
+Additional troubleshooting commands:
+--------------------------------------------------------------------------------
+# View running pods
+kubectl get pods
+
+# View services
+kubectl get svc
+
+# View ingress
+kubectl get ingress
+
+# Stop minikube
+minikube stop
+
+# Delete minikube cluster
+minikube delete
+
+--------------------------------------------------------------------------------
+End of project commands and procedures
+--------------------------------------------------------------------------------
